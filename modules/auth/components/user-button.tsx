@@ -1,6 +1,8 @@
+
 "use client";
 
 import React from "react";
+import { useSession } from "next-auth/react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -8,38 +10,41 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { cn } from "@/lib/utils";
 import { LogOut, User } from "lucide-react";
 import LogoutButton from "./logout-button";
 
-interface UserButtonProps {
-  user: {
-    name?: string | null;
-    email?: string | null;
-    image?: string | null;
-  } | null;
-}
+export default function UserButton() {
+  const { data: session, status } = useSession();
+  const user = session?.user;
 
-const UserButton = ({ user }: UserButtonProps) => {
+  // Loading state
+  if (status === "loading") {
+    return <div className="w-8 h-8 rounded-full bg-gray-200 animate-pulse" />;
+  }
+
+  // Not logged in state
+  if (!user) {
+    return (
+      <a href="/login" className="text-sm px-3 py-1 rounded-md border">
+        Login
+      </a>
+    );
+  }
+
   return (
     <DropdownMenu>
       <DropdownMenuTrigger>
-        <div className={cn("relative rounded-full")}>
-          <Avatar>
-            <AvatarImage src={user?.image ?? ""} alt={user?.name ?? ""} />
-            <AvatarFallback className="bg-red-500">
-              <User className="text-white" />
-            </AvatarFallback>
-          </Avatar>
-        </div>
+        <Avatar>
+          <AvatarImage src={user.image ?? ""} alt={user.name ?? ""} />
+          <AvatarFallback>
+            <User />
+          </AvatarFallback>
+        </Avatar>
       </DropdownMenuTrigger>
 
       <DropdownMenuContent className="mr-4">
-        <DropdownMenuItem>
-          <span>{user?.email ?? "No Email"}</span>
-        </DropdownMenuItem>
+        <DropdownMenuItem>{user.email ?? "No Email"}</DropdownMenuItem>
         <DropdownMenuSeparator />
         <LogoutButton>
           <DropdownMenuItem>
@@ -50,6 +55,4 @@ const UserButton = ({ user }: UserButtonProps) => {
       </DropdownMenuContent>
     </DropdownMenu>
   );
-};
-
-export default UserButton;
+}

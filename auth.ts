@@ -14,9 +14,9 @@ export const { auth, handlers, signIn, signOut } = NextAuth({
     /**
      * Handle user creation and account linking after a successful sign-in
      */
+    
     async signIn({ user, account, profile }) {
       if (!user || !account) return false;
-
       // Check if the user already exists
       const existingUser = await db.user.findUnique({
         where: { email: user.email! },
@@ -28,7 +28,8 @@ export const { auth, handlers, signIn, signOut } = NextAuth({
           data: {
             email: user.email!,
             name: user.name,
-            image: user.image,
+            image: user.image ?? profile?.picture ?? null,
+
            
             accounts: {
               // @ts-ignore
