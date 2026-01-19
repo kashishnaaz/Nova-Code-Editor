@@ -1,121 +1,80 @@
-import NextAuth from "next-auth"
-import { PrismaAdapter } from "@auth/prisma-adapter"
-
-import authConfig from "./auth.config"
+import NextAuth from "next-auth";
+import { PrismaAdapter } from "@auth/prisma-adapter";
+import authConfig from "./auth.config";
 import { db } from "./lib/db";
-import { getAccountByUserId, getUserById } from "./modules/auth/actions";
+import { UserRole } from "@prisma/client";
 
-
- 
-
- 
 export const { auth, handlers, signIn, signOut } = NextAuth({
   callbacks: {
-    /**
-     * Handle user creation and account linking after a successful sign-in
-     */
-    
     async signIn({ user, account, profile }) {
       if (!user || !account) return false;
-      // Check if the user already exists
+
+      // Check if user exists
       const existingUser = await db.user.findUnique({
         where: { email: user.email! },
       });
 
-      // If user does not exist, create a new one
-      if (!existingUser) {
-        const newUser = await db.user.create({
-          data: {
-            email: user.email!,
-            name: user.name,
-            image: user.image ?? profile?.picture ?? null,
+      // If login from GitHub
+      if (account.provider === "github") {
+        const username = typeof profile?.login === "string" ? profile.login : null;
 
-           
-            accounts: {
-              // @ts-ignore
-              create: {
-                type: account.type,
-                provider: account.provider,
-                providerAccountId: account.providerAccountId,
-                refreshToken: account.refresh_token,
-                accessToken: account.access_token,
-                expiresAt: account.expires_at,
-                tokenType: account.token_type,
-                scope: account.scope,
-                idToken: account.id_token,
-                sessionState: account.session_state,
+        if (!existingUser) {
+          await db.user.create({
+            data: {
+              email: user.email!,
+              name: user.name,
+              image: user.image ?? null,
+              githubUsername: username,
+              accounts: {
+                create: {
+                  type: account.type,
+                  provider: account.provider,
+                  providerAccountId: account.providerAccountId,
+                  accessToken: account.access_token,
+                },
               },
             },
-          },
-        });
-
-        if (!newUser) return false; // Return false if user creation fails
-      } else {
-        // Link the account if user exists
-        const existingAccount = await db.account.findUnique({
-          where: {
-            provider_providerAccountId: {
-              provider: account.provider,
-              providerAccountId: account.providerAccountId,
-            },
-          },
-        });
-
-        // If the account does not exist, create it
-        if (!existingAccount) {
-          await db.account.create({
-            data: {
-              userId: existingUser.id,
-              type: account.type,
-              provider: account.provider,
-              providerAccountId: account.providerAccountId,
-              refreshToken: account.refresh_token,
-              accessToken: account.access_token,
-              expiresAt: account.expires_at,
-              tokenType: account.token_type,
-              scope: account.scope,
-              idToken: account.id_token,
-              // @ts-ignore
-              sessionState: account.session_state,
-            },
           });
+        } else {
+          if (!existingUser.githubUsername && username) {
+            await db.user.update({
+              where: { id: existingUser.id },
+              data: { githubUsername: username },
+            });
+          }
         }
       }
 
       return true;
     },
 
-    async jwt({ token, user, account }) {
-      if(!token.sub) return token;
-      const existingUser = await getUserById(token.sub)
+    async jwt({ token }) {
+      if (!token.sub) return token;
 
-      if(!existingUser) return token;
+      const user = await db.user.findUnique({
+        where: { id: token.sub },
+      });
 
-      const exisitingAccount = await getAccountByUserId(existingUser.id);
-
-      token.name = existingUser.name;
-      token.email = existingUser.email;
-      token.role = existingUser.role;
+      if (user) {
+        token.githubUsername = user.githubUsername;
+        token.role = user.role;
+      }
 
       return token;
     },
 
     async session({ session, token }) {
-      // Attach the user ID from the token to the session
-    if(token.sub  && session.user){
-      session.user.id = token.sub
-    } 
-
-    if(token.sub && session.user){
-      session.user.role = token.role
-    }
-
-    return session;
+      if (session.user && token.sub) {
+        session.user.id = token.sub;
+        session.user.role = token.role as UserRole;
+        session.user.githubUsername = (token.githubUsername as string | null) ?? null;
+      }
+      return session;
     },
   },
-  
-  secret: process.env.AUTH_SECRET,
+
   adapter: PrismaAdapter(db),
   session: { strategy: "jwt" },
+  secret: process.env.AUTH_SECRET,
   ...authConfig,
-})
+});

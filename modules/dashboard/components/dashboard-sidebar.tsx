@@ -173,10 +173,10 @@ export function DashboardSidebar({ initialPlaygroundData }: { initialPlaygroundD
         <SidebarMenu>
           <SidebarMenuItem>
             <SidebarMenuButton asChild tooltip="Settings">
-              <Link href="/settings">
+              {/* <Link href="/settings">
                 <Settings className="h-4 w-4" />
                 <span>Settings</span>
-              </Link>
+              </Link> */}
             </SidebarMenuButton>
           </SidebarMenuItem>
         </SidebarMenu>

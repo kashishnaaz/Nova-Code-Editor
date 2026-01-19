@@ -24,21 +24,20 @@ export const toggleStarMarked = async (
         },
       });
     } else {
-        await db.starMark.delete({
+      await db.starMark.delete({
         where: {
           userId_playgroundId: {
             userId,
             playgroundId: playgroundId,
-
           },
         },
       });
     }
 
-     revalidatePath("/dashboard");
+    revalidatePath("/dashboard");
     return { success: true, isMarked: isChecked };
   } catch (error) {
-       console.error("Error updating problem:", error);
+    console.error("Error updating problem:", error);
     return { success: false, error: "Failed to update problem" };
   }
 };
@@ -53,14 +52,14 @@ export const getAllPlaygroundForUser = async () => {
       },
       include: {
         user: true,
-        Starmark:{
-            where:{
-                userId:user?.id!
-            },
-            select:{
-                isMarked:true
-            }
-        }
+        Starmark: {
+          where: {
+            userId: user?.id!,
+          },
+          select: {
+            isMarked: true,
+          },
+        },
       },
     });
 
@@ -127,28 +126,25 @@ export const editProjectById = async (
 
 export const duplicateProjectById = async (id: string) => {
   try {
-    const originalPlayground = await db.playground.findUnique({
+    const original = await db.playground.findUnique({
       where: { id },
-      // todo: add tempalte files
     });
-    if (!originalPlayground) {
-      throw new Error("Original playground not found");
-    }
 
-    const duplicatedPlayground = await db.playground.create({
+    if (!original) return null;
+
+    const newOne = await db.playground.create({
       data: {
-        title: `${originalPlayground.title} (Copy)`,
-        description: originalPlayground.description,
-        template: originalPlayground.template,
-        userId: originalPlayground.userId,
-
-        // todo: add template files
+        title: `${original.title} (Copy)`,
+        description: original.description,
+        template: original.template,
+        userId: original.userId,
       },
     });
 
     revalidatePath("/dashboard");
-    return duplicatedPlayground;
+    return newOne; // <-- IMPORTANT
   } catch (error) {
-    console.error("Error duplicating project:", error);
+    console.error("Error duplicating:", error);
+    return null;
   }
 };

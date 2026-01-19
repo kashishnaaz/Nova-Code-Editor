@@ -80,7 +80,7 @@ const templates: TemplateOption[] = [
     name: "Express",
     description:
       "Fast, unopinionated, minimalist web framework for Node.js to build APIs and web applications",
-    icon: "/expressjs-icon.svg",
+    icon: "/express.svg",
     color: "#000000",
     popularity: 4,
     tags: ["Node.js", "API", "Backend"],
@@ -123,15 +123,14 @@ const templates: TemplateOption[] = [
     icon: "/angular-2.svg",
     color: "#DD0031",
     popularity: 3,
-    tags: ["React", "Fullstack", "JavaScript"],
+    tags: ["UI", "Frontend", "JavaScript"],
     features: [
       "Reactive Data Binding",
       "Component System",
-      "Virtual DOM",
       "Dependency Injection",
       "TypeScript Support",
     ],
-    category: "fullstack",
+    category: "frontend",
   },
 ];
 
