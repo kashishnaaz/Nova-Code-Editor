@@ -89,7 +89,9 @@ const WebContainerPreview = ({
                 );
               }
 
-              setPreviewUrl(url);
+              // 🟢 FIX: force iframe refresh even if URL same
+              setPreviewUrl(`${url}?t=${Date.now()}`);
+
               setLoadingState((prev) => ({
                 ...prev,
                 starting: false,
@@ -99,7 +101,9 @@ const WebContainerPreview = ({
 
             setCurrentStep(4);
             setLoadingState((prev) => ({ ...prev, starting: true }));
-            return;
+
+            // 🟢 IMPORTANT FIX: DO NOT RETURN — allow remount + restart
+            // return;   ❌ REMOVED
           }
         } catch (error) {}
 
@@ -187,28 +191,34 @@ const WebContainerPreview = ({
         // STEP-4 Start The Server
 
         if (terminalRef.current?.writeToTerminal) {
-          terminalRef.current.writeToTerminal(
-            "🚀 Starting development server...\r\n"
+        terminalRef.current.writeToTerminal(
+           "🚀 Starting development server...\r\n"
           );
-        }
+       }
 
-        const startProcess = await instance.spawn("npm", ["run", "start"]);
+          const startProcess = await instance.spawn("npm", ["run", "start"]);
 
-        instance.on("server-ready", (port: number, url: string) => {
-          if (terminalRef.current?.writeToTerminal) {
-            terminalRef.current.writeToTerminal(
-              `🌐 Server ready at ${url}\r\n`
-            );
-          }
-          setPreviewUrl(url);
-          setLoadingState((prev) => ({
-            ...prev,
-            starting: false,
-            ready: true,
-          }));
-          setIsSetupComplete(true);
+          // 🟢 Prevent multiple servers: kill the previous one if "server-ready" fires again
+          instance.on("server-ready", () => {
+              startProcess.kill?.();
+       });
+
+       instance.on("server-ready", (port: number, url: string) => {
+       if (terminalRef.current?.writeToTerminal) {
+       terminalRef.current.writeToTerminal(`🌐 Server ready at ${url}\r\n`);
+       }
+
+       setPreviewUrl(`${url}?t=${Date.now()}`);
+         setLoadingState((prev) => ({
+         ...prev,
+         starting: false,
+         ready: true,
+         }));
+         setIsSetupComplete(true);
           setIsSetupInProgress(false);
-        });
+       });
+
+        
 
         // Handle start process output - stream to terminal
         startProcess.output.pipeTo(

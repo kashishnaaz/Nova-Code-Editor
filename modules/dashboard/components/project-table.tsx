@@ -55,6 +55,13 @@ import {
 import { toast } from "sonner";
 import { MarkedToggleButton } from "./marked-toggle";
 
+import {
+  deleteProjectById,
+  editProjectById,
+  duplicateProjectById
+} from "@/modules/dashboard/actions";
+
+
 interface ProjectTableProps {
   projects: Project[];
   onUpdateProject?: (
@@ -104,12 +111,12 @@ export default function ProjectTable({
   };
 
   const handleUpdateProject = async () => {
-    if (!selectedProject || !onUpdateProject) return;
+    if (!selectedProject) return;
 
     setIsLoading(true);
 
     try {
-      await onUpdateProject(selectedProject.id, editData);
+      await editProjectById(selectedProject.id, editData);
       setEditDialogOpen(false);
       toast.success("Project updated successfully");
     } catch (error) {
@@ -125,11 +132,12 @@ export default function ProjectTable({
   };
 
   const handleDeleteProject = async () => {
-    if (!selectedProject || !onDeleteProject) return;
+   if (!selectedProject) return;
+
 
     setIsLoading(true);
     try {
-      await onDeleteProject(selectedProject.id);
+      await deleteProjectById(selectedProject.id);
       setDeleteDialogOpen(false);
       setSelectedProject(null);
       toast.success("Project deleted successfully");
@@ -141,20 +149,25 @@ export default function ProjectTable({
     }
   };
 
-  const handleDuplicateProject = async (project: Project) => {
-    if (!onDuplicateProject) return;
+const handleDuplicateProject = async (project: Project) => {
+  setIsLoading(true);
+  try {
+    const newProject = await duplicateProjectById(project.id);
 
-    setIsLoading(true);
-    try {
-      await onDuplicateProject(project.id);
-      toast.success("Project duplicated successfully");
-    } catch (error) {
-      toast.error("Failed to duplicate project");
-      console.error("Error duplicating project:", error);
-    } finally {
-      setIsLoading(false);
+    if (newProject) {
+      toast.success("Project duplicated!");
+      if (onDuplicateProject) {
+        await onDuplicateProject(newProject.id);
+      }
+    } else {
+      toast.error("Duplicate failed");
     }
-  };
+  } catch (error) {
+    toast.error("Duplicate failed");
+  } finally {
+    setIsLoading(false);
+  }
+};
 
   const copyProjectUrl = (projectId: string) => {
     const url = `${window.location.origin}/playground/${projectId}`;
@@ -257,7 +270,7 @@ export default function ProjectTable({
                         Edit Project
                       </DropdownMenuItem>
                       <DropdownMenuItem
-                        onClick={() => handleDuplicateProject(project)}
+                      onClick={() => handleDuplicateProject(project)}
                       >
                         <Copy className="h-4 w-4 mr-2" />
                         Duplicate

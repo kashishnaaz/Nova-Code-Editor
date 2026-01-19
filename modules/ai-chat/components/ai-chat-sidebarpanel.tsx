@@ -1,4 +1,5 @@
 "use client";
+//console.log("Server loaded KEY:", process.env.OPENROUTER_KEY);
 
 import type React from "react";
 import { useState, useEffect, useRef } from "react";
@@ -122,8 +123,9 @@ export const AIChatSidePanel: React.FC<AIChatSidePanelProps> = ({
     const [searchTerm, setSearchTerm] = useState("");
     const [filterType, setFilterType] = useState<string>("all");
     const [autoSave, setAutoSave] = useState(true);
-    const [streamResponse, setStreamResponse] = useState(true);
-    const [model, setModel] = useState<string>("gpt-6");
+    const [streamResponse, setStreamResponse] = useState(false);
+    const [model, setModel] = useState<string>("meta-llama/llama3-70b-instruct");
+
 
     const messagesEndRef = useRef<HTMLDivElement>(null);
 
@@ -180,23 +182,24 @@ export const AIChatSidePanel: React.FC<AIChatSidePanelProps> = ({
 
     try {
       const contextualMessage = getChatModePrompt(chatMode, input.trim());
+      console.log("Selected Model:", model);
+
 
       const response = await fetch("/api/chat", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          message: contextualMessage,
-          history: messages.slice(-10).map((msg) => ({
-            role: msg.role,
-            content: msg.content,
-          })),
-          stream: streamResponse,
-          mode: chatMode,
-          model,
-        }),
-      });
+  method: "POST",
+  headers: { "Content-Type": "application/json" },
+  body: JSON.stringify({
+    message: contextualMessage,
+    history: messages.slice(-10).map(m => ({ role: m.role, content: m.content })),
+    version: model // 👈 send selected model to backend
+  }),
+});
+
+
+
+
+
+
 
       if (response.ok) {
         const data = await response.json();
@@ -209,8 +212,8 @@ export const AIChatSidePanel: React.FC<AIChatSidePanelProps> = ({
             timestamp: new Date(),
             id: Date.now().toString(),
             type: messageType,
-            tokens: data.tokens,
-            model: data.model || "AI Assistant",
+            tokens: undefined,
+            model: data.model ,
           },
         ]);
       } else {
@@ -391,9 +394,17 @@ export const AIChatSidePanel: React.FC<AIChatSidePanelProps> = ({
                                             onChange={(e) => setModel(e.target.value)}
                                             className="bg-zinc-900/60 border border-zinc-800 rounded px-2 py-1 text-zinc-200 focus:outline-none"
                                         >
-                                            <option value="gpt-6">gpt-6</option>
-                                            <option value="codellama">codellama</option>
-                                            <option value="llama2">llama2</option>
+                                            
+                                            
+                                            <option value="mistralai/devstral-2512:free">Devstral 2 (Free)</option>
+                                            <option value="qwen/qwen3-coder:free">Qwen 3 Coder (Free)</option>
+                                            <option value="meta-llama/llama-3.3-70b-instruct:free">Llama 3.3 70B (Free)</option>
+                                            
+                                        
+
+
+                                          
+
                                         </select>
                                     </div>
                                     <div className="relative">
@@ -512,7 +523,7 @@ export const AIChatSidePanel: React.FC<AIChatSidePanelProps> = ({
                                                     remarkPlugins={[remarkGfm, remarkMath]}
                                                     rehypePlugins={[rehypeKatex]}
                                                     components={{
-                                                        code: ({ children, className, inline }) => {
+                                                        code: ({ children, className, inline, ...props }: any) => {
                                                             if (inline) {
                                                                 return (
                                                                     <code className="bg-zinc-800 px-1 py-0.5 rounded text-sm">
