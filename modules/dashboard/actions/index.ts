@@ -42,7 +42,7 @@ export const toggleStarMarked = async (
   }
 };
 
-export const getAllPlaygroundForUser = async () => {
+export const getAllPlaygroundForUser = async (): Promise<any[]> => {
   const user = await currentUser();
 
   try {
@@ -66,6 +66,7 @@ export const getAllPlaygroundForUser = async () => {
     return playground;
   } catch (error) {
     console.log(error);
+    return [];
   }
 };
 
