@@ -1,6 +1,5 @@
 import Link from "next/link";
 import Image from "next/image";
-// import { ThemeToggle } from "@/components/ui/toggle-theme";
 import UserButton from "../auth/components/user-button";
 import { ThemeToggle } from "@/components/ui/theme-toggle";
 
@@ -52,7 +51,7 @@ export function Header() {
                       href="/docs/components/background-paths"
                       className="text-sm text-zinc-600 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-zinc-100 transition-colors"
                     >
-                    
+                      Docs
                     </Link> */}
                     {/* <Link
                                             href="/pricing"
@@ -96,7 +95,7 @@ export function Header() {
                     API
                   </Link>
                   <ThemeToggle />
-                  <UserButton  />
+                  <UserButton />
                 </div>
               </div>
             </div>

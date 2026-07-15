@@ -2,46 +2,68 @@ import { NextRequest, NextResponse } from "next/server";
 
 export async function POST(req: NextRequest) {
   try {
-    const body = await req.json();
-    const { message, history = [], version } = body;
+    const { message, history = [], version } = await req.json();
 
-    const systemPrompt = "You are a helpful AI assistant.";
+    const model = version || "cohere/north-mini-code:free";
 
-    const messages = [
-      { role: "system", content: systemPrompt },
-      ...history,
-      { role: "user", content: message },
-    ];
-
-    const model = version || "mistralai/devstral-2512:free";
-
-    const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
-      method: "POST",
-      headers: {
-        "Authorization": `Bearer ${process.env.OPENROUTER_API_KEY}`,
-        "Content-Type": "application/json"
-      },
-      body: JSON.stringify({
-        model: model,
-        messages: messages
-      })
-    });
+    const response = await fetch(
+      "https://openrouter.ai/api/v1/chat/completions",
+      {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${process.env.OPENROUTER_API_KEY}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          model,
+          messages: [
+            {
+              role: "system",
+              content:
+                "You are an expert AI coding assistant. Help with coding, debugging, optimization and software development.",
+            },
+            ...history,
+            {
+              role: "user",
+              content: message,
+            },
+          ],
+        }),
+      }
+    );
 
     const data = await response.json();
 
-    console.log("🔍 Executed Model:", data.model);
+    console.log("========== OPENROUTER ==========");
+    console.log("Status:", response.status);
+    console.log(JSON.stringify(data, null, 2));
+    console.log("===============================");
+
+    if (!response.ok) {
+      return NextResponse.json(
+        {
+          error: data.error?.message || "OpenRouter Error",
+        },
+        {
+          status: response.status,
+        }
+      );
+    }
 
     return NextResponse.json({
-      response: data.choices?.[0]?.message?.content || "No response",
-      executedModel: data.model,
-      requestedModel: model
+      response: data.choices?.[0]?.message?.content ?? "No response",
+      model,
     });
-
   } catch (err: any) {
-    console.error("Server Error:", err);
+    console.error(err);
+
     return NextResponse.json(
-      { error: err.message || "Unknown error" },
-      { status: 500 }
+      {
+        error: err.message,
+      },
+      {
+        status: 500,
+      }
     );
   }
 }

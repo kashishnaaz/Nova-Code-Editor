@@ -36,7 +36,7 @@ export default function UserButton() {
     <DropdownMenu>
       <DropdownMenuTrigger>
         <Avatar>
-          <AvatarImage src={user.image ?? ""} alt={user.name ?? ""} />
+          <AvatarImage src={user.githubUsername ? `https://github.com/${user.githubUsername}.png` : ""} alt={user.githubUsername ?? ""} />
           <AvatarFallback>
             <User />
           </AvatarFallback>
@@ -44,7 +44,7 @@ export default function UserButton() {
       </DropdownMenuTrigger>
 
       <DropdownMenuContent className="mr-4">
-        <DropdownMenuItem>{user.email ?? "No Email"}</DropdownMenuItem>
+        <DropdownMenuItem>{user.githubUsername ?? `User ${user.id}`}</DropdownMenuItem>
         <DropdownMenuSeparator />
         <LogoutButton>
           <DropdownMenuItem>

@@ -2,31 +2,27 @@
 
 import { useTheme } from "next-themes";
 import { useEffect, useState } from "react";
-import { Moon, Sun, SunMoon } from "lucide-react";
+import { Moon, Sun } from "lucide-react";
 
 export function ThemeToggle() {
-  const { setTheme, theme } = useTheme();
+  const { resolvedTheme, setTheme } = useTheme();
   const [mounted, setMounted] = useState(false);
 
-  useEffect(() => {
-    setMounted(true);
-  }, []);
+  useEffect(() => setMounted(true), []);
 
-  if (!mounted) {
-    return null;
-  }
+  if (!mounted) return null;
 
   return (
     <div
       className="cursor-pointer"
-      onClick={() => {
-        setTheme(theme === "light" ? "dark" : "light");
-      }}
+      onClick={() =>
+        setTheme(resolvedTheme === "light" ? "dark" : "light")
+      }
     >
-      {theme === "light" ? (
+      {resolvedTheme === "light" ? (
         <Moon className="h-5 w-5 text-black" />
       ) : (
-        <Sun className="h-5 w-5 text-white" color="white" />
+        <Sun className="h-5 w-5 text-white" />
       )}
     </div>
   );

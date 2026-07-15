@@ -124,7 +124,7 @@ export const AIChatSidePanel: React.FC<AIChatSidePanelProps> = ({
     const [filterType, setFilterType] = useState<string>("all");
     const [autoSave, setAutoSave] = useState(true);
     const [streamResponse, setStreamResponse] = useState(false);
-    const [model, setModel] = useState<string>("meta-llama/llama3-70b-instruct");
+    const [model, setModel] = useState<string>("cohere/north-mini-code:free");
 
 
     const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -213,7 +213,7 @@ export const AIChatSidePanel: React.FC<AIChatSidePanelProps> = ({
             id: Date.now().toString(),
             type: messageType,
             tokens: undefined,
-            model: data.model ,
+            model: data.model ?? model, 
           },
         ]);
       } else {
@@ -396,9 +396,17 @@ export const AIChatSidePanel: React.FC<AIChatSidePanelProps> = ({
                                         >
                                             
                                             
-                                            <option value="mistralai/devstral-2512:free">Devstral 2 (Free)</option>
-                                            <option value="qwen/qwen3-coder:free">Qwen 3 Coder (Free)</option>
-                                            <option value="meta-llama/llama-3.3-70b-instruct:free">Llama 3.3 70B (Free)</option>
+                                            <option value="cohere/north-mini-code:free">
+                                                🧠 North Mini Code
+                                                </option>
+
+                                                <option value="nvidia/nemotron-3-ultra-550b-a55b:free">
+                                                ⚡ Nemotron 3 Ultra
+                                                </option>
+
+                                                <option value="qwen/qwen3-coder:free">
+                                                💻 Qwen 3 Coder
+                                                </option>
                                             
                                         
 
